@@ -26,26 +26,55 @@ function getTagFromIdentifierAndTitle(tagName, identifier, title) {
 	{
 		
 		var mcnumber = $("input[title='MC Number']").val();
+		$("input[title='Carrier Name']").val("");
+		$("input[title='Dispatch Phone Number']").val("");
+		$("input[title='Dispatch Fax']").val("");
+		$( "input[title='Dispatch Contact']").val("");
+		$( "input[title='Dispatch Contact (NPL)']" ).val("");
+		$( "input[title='Dispatch Email (NPL)']").val("");
+		$( "input[title='Dispatch Phone (NPL)']").val("");
 		$().SPServices(
 			{
 				operation: "GetListItems",
 				async: false,
 				listName: "Carrier411",
-				CAMLViewFields: "<ViewFields><FieldRef Name='LEGALNAME'/><FieldRef Name='PHONE'/><FieldRef Name='FAX'/></ViewFields>",
+				CAMLViewFields: "<ViewFields><FieldRef Name='Dispatch_x0020_Phone_x0020__x002'/><FieldRef Name='Dispatch_x0020_Email_x0020__x002'/><FieldRef Name='Dispatch_x0020_Contact_x0020__x0'/><FieldRef Name='DBANAME'/><FieldRef Name='LEGALNAME'/><FieldRef Name='PHONE'/><FieldRef Name='FAX'/></ViewFields>",
 				CAMLQuery: "<Query><Where><Eq><FieldRef Name='Title'/><Value Type='Text'>" + mcnumber + "</Value></Eq></Where></Query>",
 				completefunc: function (xData, Status)
 				{
 					$(xData.responseXML).SPFilterNode("z:row").each(function()
 					{
 						$("input[title='Carrier Name']").val($(this).attr("ows_LEGALNAME"));
+						$( "input[title='Dispatch Contact']").val($(this).attr("ows_DBANAME"));
+						$( "input[title='Dispatch Contact (NPL)']" ).val($(this).attr("ows_Dispatch_x0020_Contact_x0020__x0"));
+						$( "input[title='Dispatch Email (NPL)']").val($(this).attr("ows_Dispatch_x0020_Email_x0020__x002"));
+						$( "input[title='Dispatch Phone (NPL)']").val($(this).attr("ows_Dispatch_x0020_Phone_x0020__x002"));
 						phone = $(this).attr("ows_PHONE");
-						phone = phone.split('.')[0];
-						phone = phone.substring(0,3) + "." + phone.substring(3,6) + "." + phone.substring(6);
-						$("input[title='Dispatch Phone Number']").val(phone);
+						if (!phone)
+						{
+							try
+							{
+								phone = phone.split('.')[0];
+								phone = phone.substring(0,3) + "." + phone.substring(3,6) + "." + phone.substring(6);
+								$("input[title='Dispatch Phone Number']").val(phone);
+							}
+							catch(err)
+							{
+							}
+						}
 						fax = $(this).attr("ows_FAX");
-						fax = fax.split('.')[0];
-						fax = fax.substring(0,3) + "." + fax.substring(3,6) + "." + fax.substring(6);
-						$("input[title='Dispatch Fax']").val(fax);
+						if (!fax)
+						{
+							try
+							{
+								fax = fax.split('.')[0];
+								fax = fax.substring(0,3) + "." + fax.substring(3,6) + "." + fax.substring(6);
+								$("input[title='Dispatch Fax']").val(fax);
+							}
+							catch(err)
+							{
+							}
+						}						
 					});
 				}
 			});
