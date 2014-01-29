@@ -1,0 +1,173 @@
+<link rel="stylesheet" href="//nplweb.net/nplweb/Scripts/jquery-ui-1.8rc3.custom/css/smoothness/jquery-ui-1.8rc3.custom.css" type="text/css" media="all" /> 
+<script src="../Scripts/jquery-ui-1.8rc3.custom/js/jquery-1.4.2.min.js" type="text/javascript"></script>
+<script src="//nplweb.net/nplweb/Scripts/jquery.SPServices-0.7.2.min.js" type="text/javascript"></script>
+<script src="//nplweb.net/nplweb/Scripts/jquery-ui-1.8rc3.custom/js/jquery-ui-1.8rc3.custom.min.js" type="text/javascript"></script>
+<script>
+$(document).ready(function()
+{
+	
+
+function getTagFromIdentifierAndTitle(tagName, identifier, title) {
+		var len = identifier.length;
+		var tags = document.getElementsByTagName(tagName);
+
+		for (var i=0; i < tags.length; i++) {
+			var tempString = tags[i].id;
+			if (tags[i].title == title && (identifier == "" || tempString.indexOf(identifier) == tempString.length - len)) {
+				return tags[i];
+			}
+		}
+		return null;
+	}
+	var mcNumberChange = getTagFromIdentifierAndTitle("input","","MC Number");
+	mcNumberChange.onblur = function() { populate() };
+	//mcNumberChange.click = function (){ populate() };
+	function populate()
+	{
+		
+		var mcnumber = $("input[title='MC Number']").val();
+		$().SPServices(
+			{
+				operation: "GetListItems",
+				async: false,
+				listName: "Carrier411",
+				CAMLViewFields: "<ViewFields><FieldRef Name='LEGALNAME'/><FieldRef Name='PHONE'/><FieldRef Name='FAX'/></ViewFields>",
+				CAMLQuery: "<Query><Where><Eq><FieldRef Name='Title'/><Value Type='Text'>" + mcnumber + "</Value></Eq></Where></Query>",
+				completefunc: function (xData, Status)
+				{
+					$(xData.responseXML).SPFilterNode("z:row").each(function()
+					{
+						$("input[title='Carrier Name']").val($(this).attr("ows_LEGALNAME"));
+						phone = $(this).attr("ows_PHONE");
+						phone = phone.split('.')[0];
+						phone = phone.substring(0,3) + "." + phone.substring(3,6) + "." + phone.substring(6);
+						$("input[title='Dispatch Phone Number']").val(phone);
+						fax = $(this).attr("ows_FAX");
+						fax = fax.split('.')[0];
+						fax = fax.substring(0,3) + "." + fax.substring(3,6) + "." + fax.substring(6);
+						$("input[title='Dispatch Fax']").val(fax);
+					});
+				}
+			});
+	}
+/////////////////////////////////Tracking Notes////////////////////////////////////////////////////////////////////
+$("#trackingNotesID0EAAA").html("<div id='trackingNotesDialog'><textarea cols='40' rows='10' id='textareaTN'></textarea></div><br><a href='#' id='editTNDialog'>Add Note</a>");
+	function refreshNotes ()
+	{
+	var loadNumber = $("input[title='Name Entry']").val();
+	$("#TNSpan").remove();
+		$().SPServices(
+		{
+			operation: "GetListItems",
+			async: false,
+			listName: "TL Dashboard",
+			CAMLViewFields: "<ViewFields><FieldRef Name='Tracking_x0020_Notes'/><FieldRef Name='ID'/></ViewFields>",
+			CAMLQuery: "<Query><Where><Eq><FieldRef Name='Title'/><Value Type='Text'>" + loadNumber + "</Value></Eq></Where></Query>",
+			completefunc: function (xData, Status)
+			{
+				$(xData.responseXML).SPFilterNode("z:row").each(function()
+				{
+					notes = $(this).attr("ows_Tracking_x0020_Notes");
+					window.noteID = $(this).attr("ows_ID");
+					var temp = "";
+					if ( notes != undefined )
+					{
+						var notes = notes.split(";");
+						for ( n = 0; n < notes.length; n++ )
+						{
+							temp = temp + notes[n] + '<br><br>';
+						}
+					}
+					$("#trackingNotesID0EAAA").prepend("<span id='TNSpan'>" + temp + "</span>");
+					
+				});
+			}
+		});
+		}
+		refreshNotes();
+	
+	
+	$(function ()
+	{
+		$('#trackingNotesDialog').dialog(
+		{
+			autoOpen:false,
+			resizable:false,
+			width:425,
+			modal:true,
+			buttons:
+			{
+				"Save Notes": function()
+				{
+					listname = "TL Dashboard";
+					exsistingData = "";
+					$().SPServices(
+					{
+						 operation: "GetListItems",
+						 async: false,
+						 listName: "TL Dashboard",
+						 CAMLViewFields: "<ViewFields><FieldRef Name='Tracking_x0020_Notes'/></ViewFields>",
+						 CAMLQuery: "<Query><Where><Eq><FieldRef Name='ID'/><Value Type='Text'>" + window.noteID + "</Value></Eq></Where></Query>",
+						 completefunc: function (xData, Status) 
+						{
+							
+							$(xData.responseXML).SPFilterNode("z:row").each(function()
+							{ 
+								data = ($(this).attr("ows_Tracking_x0020_Notes"));
+								if ( data != undefined )
+								{
+									self.exsistingData = data;
+								}
+								else
+								{
+									self.exsistingData = " ";
+								}
+								
+							});
+						}
+					});
+					thisUserName = $().SPServices.SPGetCurrentUser(
+					{
+						fieldName: "Name",
+						debug: false
+					});
+					var currentDate = new Date();
+					var currentTime = (currentDate.getMonth()+1) + "/"
+						+ currentDate.getDate() + "/"
+						+ currentDate.getFullYear() + " "
+						+ currentDate.getHours() + ":"
+						+(currentDate.getMinutes()<10?'0':'') + currentDate.getMinutes() ;
+					thisUserName = thisUserName.split("\\")[1];
+					fieldData = thisUserName + " " + currentTime + " - " + $('#textareaTN').val() + ";" + self.exsistingData;
+					$().SPServices({
+						operation: "UpdateListItems",
+						async: false,
+						batchCmd: "Update",
+						listName: "TL Dashboard",
+						ID: window.noteID,
+						valuepairs: [["Tracking_x0020_Notes", fieldData]],
+						completefunc: function(xData, Status) {
+						}
+					});
+					$( this ).dialog( "close" );					
+					refreshNotes();
+				},
+				Cancel: function()
+				{
+					$( this ).dialog( "close" );
+				}
+			}
+		});
+	});
+	$( "#editTNDialog" ).click(function()
+	{
+		$( "#trackingNotesDialog" ).dialog( "open" );
+	});
+
+	
+	
+	
+	
+	
+});
+</script>
