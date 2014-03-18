@@ -2,10 +2,20 @@
 <script src="../Scripts/jquery-ui-1.8rc3.custom/js/jquery-1.4.2.min.js" type="text/javascript"></script>
 <script src="//nplweb.net/nplweb/Scripts/jquery.SPServices-0.7.2.min.js" type="text/javascript"></script>
 <script src="//nplweb.net/nplweb/Scripts/jquery-ui-1.8rc3.custom/js/jquery-ui-1.8rc3.custom.min.js" type="text/javascript"></script>
+<script src="//nplweb.net:3001/socket.io/socket.io.js"></script>
 <script>
+function PreSaveAction()
+{
+	//self.socket = io.connect('http://nplweb.net:3001');
+	//self.socket.emit( 'refresh clients', '' );
+	return true;
+}
 $(document).ready(function()
 {
 	
+$("input[title='Carrier Name']").attr('readonly',true);
+$("input[title='Carrier Name']").css('background-color','white');
+$("input[title='Carrier Name']").css('color','black');
 
 function getTagFromIdentifierAndTitle(tagName, identifier, title) {
 		var len = identifier.length;
