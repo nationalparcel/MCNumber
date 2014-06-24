@@ -50,7 +50,7 @@ $(document).ready(function()
 				}
 				else
 				{
-					$( "input[title='Estimated Cost']" ).val( "1" );
+					$( "input[title='Estimated Cost']" ).val( "2" );
 					hiddenInput = $("input[title='MC Number']").attr("optHid");
 					$("input[id='" +hiddenInput+ "']").attr("value","5679");
 					$("input[title='MC Number']").val("MC167698");
